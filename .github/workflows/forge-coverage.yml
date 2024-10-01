@@ -1,0 +1,42 @@
+name: Forge Coverage
+
+on:
+  workflow_call:
+    inputs:
+      match-path:
+        type: string
+        required: true
+        description: Path to the test files
+
+      verbose:
+        type: boolean
+        required: false
+        description: Enable verbose output
+        default: false
+
+    secrets:
+      CODECOV_TOKEN:
+        required: true
+        description: Codecov token
+
+      ALCHEMY_API_KEY_ARBITRUM:
+        required: false
+        description: Alchemy API key for Arbitrum
+
+jobs:
+  coverage:
+    env:
+      ALCHEMY_API_KEY_ARBITRUM: ${{ secrets.ALCHEMY_API_KEY_ARBITRUM }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1.2.0
+      - run: forge coverage --report lcov --match-path ${{ inputs.match-path }}
+      - uses: codecov/codecov-action@v4
+        with:
+          files: lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          verbose: ${{ inputs.verbose }}
